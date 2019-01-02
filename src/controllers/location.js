@@ -1,27 +1,13 @@
 const mongoose = require('mongoose');
 const Location = require('../models/location');
-const computeTotalPopulation = require('./helpers').computeTotalPopulation;
+const {
+  computeTotalPopulation,
+  appendLocationToParent,
+  deleteChildren,
+  removeLocationFromParent
+} = require('./helpers');
 
-const appendToParent = location => {
-  return location.parent
-    ? Location.findById(location.parent)
-        .exec()
-        .then(parent => {
-          parent.children.push(location._id);
-          parent.save();
-          return location;
-        })
-        .catch(error => {
-          throw error;
-        })
-    : location;
-};
-
-const getId = req => {
-  return req.params.id;
-};
-
-const getPopulationGraph = (req, res, next) => {
+const getLocation = (req, res, next) => {
   const id = req.cleanedBody.id;
   const match = id ? { _id: mongoose.Types.ObjectId(id) } : {};
   return Location.aggregate([
@@ -37,27 +23,12 @@ const getPopulationGraph = (req, res, next) => {
     }
   ])
     .then(computeTotalPopulation)
-    .then(location =>
-      res.status(200).send({ length: location.length, location })
-    )
+    .then(locations => {
+      const data = id ? { location: locations[0] } : { locations };
+      res.status(200).send(data);
+    })
     .catch(error => next(error));
 };
-
-const getLocation = (req, res, next) => {
-  const id = getId(req);
-  Location.findById(id)
-    .then(location => {
-      if (location) {
-        return res.status(200).send({ location, message: 'Location Found' });
-      }
-      return res
-        .status(404)
-        .send({ location: null, message: 'Location not found' });
-    })
-    .catch(err => next(err));
-};
-
-const getLocations = (req, res, next) => {};
 
 const addLocation = (req, res, next) => {
   const { name, parent } = req.cleanedBody;
@@ -73,7 +44,7 @@ const addLocation = (req, res, next) => {
         });
       }
       return Location.create(req.cleanedBody)
-        .then(appendToParent)
+        .then(appendLocationToParent)
         .then(location => {
           res.status(200).send({
             location,
@@ -101,24 +72,24 @@ const updateLocation = (req, res, next) => {
 
 const removeLocation = (req, res, next) => {
   Location.findById(req.cleanedBody.id)
-  .exec()
-
-  
-  Location.findByIdAndRemove(req.cleanedBody.id)
     .exec()
-    .then(location =>
-      res
-        .status(204)
-        .send({ location, message: 'successfully deleted location' })
-    )
+    .then(location => {
+      if (location) {
+        deleteChildren(location);
+        removeLocationFromParent(location);
+        location.remove();
+        return res
+          .status(200)
+          .send({ message: 'successfully deleted location' });
+      }
+      return res.status(404).send({ message: 'Unable to find location' });
+    })
     .catch(err => next(err));
 };
 
 module.exports = {
   addLocation,
   getLocation,
-  getLocations,
   updateLocation,
-  removeLocation,
-  getPopulationGraph
+  removeLocation
 };
