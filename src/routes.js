@@ -11,13 +11,12 @@ router.use((req, _, next) => {
 router.get('/', (req, res) =>
   res.status(200).send({ message: 'Welcome to the Population API' })
 );
-router.get('/population/:id?', validateId, Location.getPopulationGraph);
-router.get('/locations', Location.getLocations);
-router.post('/location', cleanLocation, Location.addLocation);
 router
-  .route('/location/:id')
+  .route('/locations/:id?')
+  .all(validateId)
   .get(Location.getLocation)
-  .put(validateId, cleanLocation, Location.updateLocation)
+  .put(cleanLocation, Location.updateLocation)
+  .post(cleanLocation, Location.addLocation)
   .delete(Location.removeLocation);
 
 module.exports = router;
