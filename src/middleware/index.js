@@ -1,9 +1,25 @@
 const deepClone = require('deepclonejs');
 const mongoose = require('mongoose');
 
-exports.cleanLocation = (req, _, next) => {
+exports.cleanLocation = (req, res, next) => {
   req.cleanedBody = { ...req.cleanedBody, ...trimFields(req.body) };
-  req.cleanedBody.parent = req.cleanedBody.parent || null;
+  if (req.method === 'PUT') {
+    const { name, parent, population } = req.cleanedBody;
+    if (
+      name === undefined ||
+      parent === undefined ||
+      population.male === undefined ||
+      population.female === undefined
+    ) {
+      return res.status(400).send({
+        error: {
+          message: 'Partial updates are not allowed. Include all fields'
+        }
+      });
+    }
+  }
+  delete req.cleanedBody._id;
+  delete req.cleanedBody.children;
   next();
 };
 
@@ -25,5 +41,16 @@ exports.validateId = (req, res, next) => {
   } catch (error) {
     return res.status(400).send({ error: { message: 'Invalid id' } });
   }
+  next();
+};
+
+exports.cleanPopulation = (req, _, next) => {
+  if (req.cleanedBody.population && req.cleanedBody.population.male) {
+    req.cleanedBody['population.male'] = req.cleanedBody.population.male;
+  }
+  if (req.cleanedBody.population && req.cleanedBody.population.female) {
+    req.cleanedBody['population.female'] = req.cleanedBody.population.female;
+  }
+  delete req.cleanedBody.population;
   next();
 };

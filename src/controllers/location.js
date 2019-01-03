@@ -58,10 +58,16 @@ const addLocation = (req, res, next) => {
 const updateLocation = (req, res, next) => {
   Location.findByIdAndUpdate(
     req.cleanedBody.id,
-    { $set: req.cleanedBody },
-    { new: true }
+    { ...req.cleanedBody },
+    { new: true, runValidators: true }
   )
     .exec()
+    .then(location => {
+      if (!req.cleanedBody.parent && req.cleanedBody.parent !== undefined) {
+        removeLocationFromParent(location);
+      }
+      return location;
+    })
     .then(location =>
       res
         .status(200)

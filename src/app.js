@@ -37,6 +37,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/', routes);
 
 app.use((err, req, res, _) => {
+  if (err.name === 'CastError') {
+    err.message = `${err.path} is invalid`
+  }
   res.send({ error: { message: err.message } });
 });
 

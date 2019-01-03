@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const Location = require('./controllers/location');
-const cleanLocation = require('./middleware').cleanLocation;
-const validateId = require('./middleware').validateId;
+const { cleanLocation, cleanPopulation, validateId } = require('./middleware');
 
 router.use((req, _, next) => {
   req.cleanedBody = {};
@@ -13,10 +12,10 @@ router.get('/', (req, res) =>
 );
 router
   .route('/locations/:id?')
-  .all(validateId)
+  .all(validateId, cleanLocation)
   .get(Location.getLocation)
-  .put(cleanLocation, Location.updateLocation)
-  .post(cleanLocation, Location.addLocation)
+  .put(cleanPopulation, Location.updateLocation)
+  .post(Location.addLocation)
   .delete(Location.removeLocation);
 
 module.exports = router;
