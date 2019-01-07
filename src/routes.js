@@ -7,15 +7,12 @@ router.use((req, _, next) => {
   next();
 });
 
-router.get('/', (req, res) =>
-  res.status(200).send({ message: 'Welcome to the Population API' })
-);
 router
   .route('/locations/:id?')
   .all(validateId, cleanLocation)
   .get(Location.getLocation)
-  .put(cleanPopulation, Location.updateLocation)
   .post(Location.addLocation)
+  .put(cleanPopulation, Location.updateLocation)
   .delete(Location.removeLocation);
 
 module.exports = router;

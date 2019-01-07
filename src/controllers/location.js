@@ -24,8 +24,13 @@ const getLocation = (req, res, next) => {
   ])
     .then(computeTotalPopulation)
     .then(locations => {
-      const data = id ? { location: locations[0] } : { locations };
-      res.status(200).send(data);
+      if (locations.length) {
+        const data = id ? { location: locations[0] } : { locations };
+        return res.status(200).send(data);
+      }
+      return res
+        .status(404)
+        .send({ message: 'No location matched your query' });
     })
     .catch(error => next(error));
 };
@@ -46,7 +51,7 @@ const addLocation = (req, res, next) => {
       return Location.create(req.cleanedBody)
         .then(appendLocationToParent)
         .then(location => {
-          res.status(200).send({
+          res.status(201).send({
             location,
             message: `Successfully added ${location.name}`
           });

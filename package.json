@@ -2,11 +2,11 @@
   "name": "population",
   "version": "1.0.0",
   "description": "",
-  "main": "src/apps.js",
+  "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./src/app.js",
-    "start": "node ./src/app.js"
+    "test": "jest",
+    "dev": "nodemon ./src/bin/www.js",
+    "start": "node ./src/bin/www.js"
   },
   "author": "segun ola",
   "license": "MIT",
@@ -15,7 +15,12 @@
     "deepclonejs": "^1.0.3",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
+    "jest": "^23.6.0",
     "mongoose": "^5.4.1",
     "nodemon": "^1.18.9"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^2.9.1",
+    "supertest": "^3.3.0"
   }
 }
